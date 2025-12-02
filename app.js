@@ -747,11 +747,67 @@ document.getElementById('notesTextarea')?.addEventListener('input', debounce(() 
 // ============================================
 let draggedElement = null;
 
+// Vibration mobile
+function vibrate(duration = 50) {
+    if ('vibrate' in navigator) {
+        navigator.vibrate(duration);
+    }
+}
+
+// Créer des confetti/emoji animés
+function createConfetti(x, y) {
+    const emojis = ['💪', '🔥', '⚡', '✨', '🎯', '💥', '🌟'];
+    const numberOfConfetti = 6;
+
+    for (let i = 0; i < numberOfConfetti; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        confetti.style.left = x + 'px';
+        confetti.style.top = y + 'px';
+
+        // Position aléatoire autour du point de drop
+        const angle = (Math.PI * 2 * i) / numberOfConfetti;
+        const distance = 50 + Math.random() * 50;
+        const offsetX = Math.cos(angle) * distance;
+        const offsetY = Math.sin(angle) * distance;
+
+        confetti.style.setProperty('--offset-x', offsetX + 'px');
+        confetti.style.setProperty('--offset-y', offsetY + 'px');
+
+        document.body.appendChild(confetti);
+
+        // Retirer l'élément après l'animation
+        setTimeout(() => confetti.remove(), 1000);
+    }
+}
+
 function handleDragStart(e) {
     draggedElement = e.currentTarget;
     e.currentTarget.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+
+    // Vibration de pickup
+    vibrate(30);
+
+    // Son de pickup (plus léger)
+    if (AppState.soundEnabled) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = 400;
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+    }
 }
 
 function handleDragEnd(e) {
@@ -790,8 +846,40 @@ function handleDrop(e) {
             list.insertBefore(draggedElement, dropTarget.nextSibling);
         }
 
-        showToast('✓ Ordre modifié');
-        playCompletionSound();
+        // Effets de drop réussi
+        // 1. Vibration double
+        vibrate([50, 30, 50]);
+
+        // 2. Animation bounce
+        draggedElement.classList.add('just-dropped');
+        setTimeout(() => draggedElement.classList.remove('just-dropped'), 500);
+
+        // 3. Confetti autour de l'élément droppé
+        const rect = draggedElement.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        createConfetti(centerX, centerY);
+
+        // 4. Son de drop (plus fort et satisfaisant)
+        if (AppState.soundEnabled) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 600;
+            oscillator.type = 'triangle';
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+
+        // 5. Toast avec emoji
+        showToast('🎯 Ordre modifié !');
     }
 
     dropTarget.classList.remove('drag-over');

@@ -388,9 +388,14 @@ main {
 }
 
 .exercise-item.dragging {
-    opacity: 0.5;
-    transform: rotate(2deg);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    opacity: 0.8;
+    transform: scale(1.05) rotate(3deg);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+    animation: dragPulse 0.6s ease-in-out infinite;
+    cursor: grabbing;
+    z-index: 1000;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--primary) 100%);
+    border: 2px solid var(--primary);
 }
 
 .exercise-item.drag-over {
@@ -404,10 +409,26 @@ main {
     cursor: grab;
     padding: 5px;
     margin-right: 5px;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.drag-handle:hover {
+    color: var(--primary);
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.6));
+    animation: wiggle 0.5s ease-in-out;
 }
 
 .drag-handle:active {
     cursor: grabbing;
+    transform: scale(0.9);
+}
+
+@keyframes wiggle {
+    0%, 100% { transform: rotate(0deg) scale(1.2); }
+    25% { transform: rotate(-5deg) scale(1.2); }
+    75% { transform: rotate(5deg) scale(1.2); }
 }
 
 .exercise-item:hover {
@@ -1094,4 +1115,55 @@ html {
 ::selection {
     background: var(--primary);
     color: white;
+}
+
+/* ============================================
+   DRAG & DROP ANIMATIONS
+   ============================================ */
+@keyframes dragPulse {
+    0%, 100% {
+        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+    }
+    50% {
+        box-shadow: 0 20px 50px rgba(102, 126, 234, 0.8);
+        transform: scale(1.08) rotate(3deg);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.9);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes confettiFloat {
+    0% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--offset-x, 0), calc(var(--offset-y, 0) - 100px)) rotate(720deg) scale(0);
+        opacity: 0;
+    }
+}
+
+/* Confetti particles */
+.confetti {
+    position: fixed;
+    font-size: 1.5em;
+    pointer-events: none;
+    z-index: 9999;
+    animation: confettiFloat 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Animation de drop réussi */
+.exercise-item.just-dropped {
+    animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
