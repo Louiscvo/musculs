@@ -816,6 +816,7 @@ function handleDragEnd(e) {
     // Retirer tous les indicateurs de survol
     document.querySelectorAll('.exercise-item').forEach(item => {
         item.classList.remove('drag-over');
+        item.classList.remove('drag-forbidden');
     });
 }
 
@@ -824,7 +825,21 @@ function handleDragOver(e) {
         e.preventDefault();
     }
 
-    e.dataTransfer.dropEffect = 'move';
+    const dropTarget = e.currentTarget;
+    const draggedList = draggedElement?.parentNode;
+    const dropList = dropTarget.parentNode;
+
+    // Si c'est une catégorie différente, montrer que c'est interdit
+    if (draggedList && draggedList !== dropList) {
+        e.dataTransfer.dropEffect = 'none';
+        dropTarget.classList.add('drag-forbidden');
+        dropTarget.classList.remove('drag-over');
+    } else {
+        e.dataTransfer.dropEffect = 'move';
+        dropTarget.classList.remove('drag-forbidden');
+        dropTarget.classList.add('drag-over');
+    }
+
     return false;
 }
 
@@ -836,6 +851,48 @@ function handleDrop(e) {
     const dropTarget = e.currentTarget;
 
     if (draggedElement !== dropTarget) {
+        // Vérifier que les deux éléments sont dans la même catégorie (même liste parente)
+        const draggedList = draggedElement.parentNode;
+        const dropList = dropTarget.parentNode;
+
+        // Si les listes sont différentes, refuser le drop
+        if (draggedList !== dropList) {
+            // Feedback négatif
+            dropTarget.classList.remove('drag-over');
+
+            // Vibration d'erreur
+            vibrate([100, 50, 100]);
+
+            // Son d'erreur
+            if (AppState.soundEnabled) {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 200;
+                oscillator.type = 'sawtooth';
+                gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.15);
+            }
+
+            // Animation shake de refus
+            dropTarget.style.animation = 'shake 0.3s ease-in-out';
+            setTimeout(() => {
+                dropTarget.style.animation = '';
+            }, 300);
+
+            // Toast d'erreur
+            showToast('❌ Impossible ! Même catégorie seulement');
+
+            return false;
+        }
+
         // Récupérer le parent (la liste)
         const list = dropTarget.parentNode;
 
@@ -883,11 +940,13 @@ function handleDrop(e) {
     }
 
     dropTarget.classList.remove('drag-over');
+    dropTarget.classList.remove('drag-forbidden');
     return false;
 }
 
 function handleDragLeave(e) {
     e.currentTarget.classList.remove('drag-over');
+    e.currentTarget.classList.remove('drag-forbidden');
 }
 
 console.log('✅ Musculs Pro chargé avec succès');

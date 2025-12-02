@@ -403,6 +403,13 @@ main {
     margin-top: 10px;
 }
 
+.exercise-item.drag-forbidden {
+    border: 2px dashed var(--danger);
+    background: rgba(245, 101, 101, 0.1);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .drag-handle {
     color: var(--text-secondary);
     font-size: 1.2em;
@@ -429,6 +436,12 @@ main {
     0%, 100% { transform: rotate(0deg) scale(1.2); }
     25% { transform: rotate(-5deg) scale(1.2); }
     75% { transform: rotate(5deg) scale(1.2); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
 }
 
 .exercise-item:hover {
