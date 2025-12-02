@@ -1,41 +1,169 @@
-// Variables globales
-let currentDay = null;
-let timerInterval = null;
-let timeRemaining = 180; // 3 minutes en secondes
+// ============================================
+// MUSCULS PRO - Application JavaScript
+// Version 2.0 - Mode Professionnel
+// ============================================
 
-// Initialisation
+// État de l'application
+const AppState = {
+    currentDay: null,
+    timerInterval: null,
+    timeRemaining: 180,
+    timerDuration: 180,
+    theme: localStorage.getItem('theme') || 'light',
+    soundEnabled: localStorage.getItem('soundEnabled') !== 'false',
+    notificationsEnabled: localStorage.getItem('notificationsEnabled') !== 'false',
+    workoutData: JSON.parse(localStorage.getItem('workoutData')) || {},
+    completedExercises: new Set(),
+    stats: JSON.parse(localStorage.getItem('stats')) || {
+        totalWorkouts: 0,
+        currentStreak: 0,
+        totalTime: 0,
+        lastWorkoutDate: null,
+        completedDays: {}
+    }
+};
+
+// ============================================
+// INITIALISATION
+// ============================================
 document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
+    setupEventListeners();
+    loadTheme();
     displayCurrentDay();
-    setupDayButtons();
-    setupTimer();
     selectTodayAutomatically();
+    updateStats();
+    requestNotificationPermission();
 });
 
-// Afficher le jour actuel
+function initializeApp() {
+    console.log('🚀 Musculs Pro initialisé');
+}
+
+// ============================================
+// GESTION DU THÈME
+// ============================================
+function loadTheme() {
+    document.documentElement.setAttribute('data-theme', AppState.theme);
+    updateThemeIcon();
+}
+
+function toggleTheme() {
+    AppState.theme = AppState.theme === 'light' ? 'dark' : 'light';
+    localStorage.setItem('theme', AppState.theme);
+    document.documentElement.setAttribute('data-theme', AppState.theme);
+    updateThemeIcon();
+    showToast(`Mode ${AppState.theme === 'dark' ? 'sombre' : 'clair'} activé`);
+}
+
+function updateThemeIcon() {
+    const icon = document.querySelector('.theme-icon');
+    if (icon) {
+        icon.textContent = AppState.theme === 'dark' ? '☀️' : '🌙';
+    }
+}
+
+// ============================================
+// EVENT LISTENERS
+// ============================================
+function setupEventListeners() {
+    // Thème
+    document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+
+    // Navigation des jours
+    document.querySelectorAll('.day-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const day = button.getAttribute('data-day');
+            selectDay(day);
+            updateDayButtons();
+        });
+    });
+
+    // Timer
+    document.getElementById('startTimer')?.addEventListener('click', toggleTimer);
+    document.getElementById('resetTimer')?.addEventListener('click', resetTimer);
+    document.getElementById('skipTimer')?.addEventListener('click', skipTimer);
+
+    // Presets timer
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const time = parseInt(e.target.getAttribute('data-time'));
+            setTimerDuration(time);
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+        });
+    });
+
+    // Notes
+    document.getElementById('saveNotes')?.addEventListener('click', saveNotes);
+
+    // Footer navigation
+    document.querySelectorAll('.footer-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const view = e.currentTarget.getAttribute('data-view');
+            handleNavigation(view);
+        });
+    });
+
+    // Modal closes
+    document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const modalId = e.target.getAttribute('data-modal');
+            closeModal(modalId);
+        });
+    });
+
+    // Click outside modal to close
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+
+    // Complete workout
+    document.getElementById('completeWorkout')?.addEventListener('click', completeWorkout);
+
+    // Settings
+    document.getElementById('notificationsToggle')?.addEventListener('change', (e) => {
+        AppState.notificationsEnabled = e.target.checked;
+        localStorage.setItem('notificationsEnabled', e.target.checked);
+    });
+
+    document.getElementById('soundToggle')?.addEventListener('change', (e) => {
+        AppState.soundEnabled = e.target.checked;
+        localStorage.setItem('soundEnabled', e.target.checked);
+    });
+
+    document.getElementById('exportData')?.addEventListener('click', exportData);
+    document.getElementById('resetData')?.addEventListener('click', resetData);
+}
+
+// ============================================
+// AFFICHAGE DU JOUR ACTUEL
+// ============================================
 function displayCurrentDay() {
     const days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
     const today = new Date();
     const dayName = days[today.getDay()];
-    const currentDayElement = document.getElementById('currentDay');
-    currentDayElement.textContent = `Aujourd'hui : ${dayName.charAt(0).toUpperCase() + dayName.slice(1)}`;
-}
+    const formatted = dayName.charAt(0).toUpperCase() + dayName.slice(1);
 
-// Configurer les boutons de sélection de jour
-function setupDayButtons() {
-    const dayButtons = document.querySelectorAll('.day-btn');
-    dayButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const selectedDay = button.getAttribute('data-day');
-            selectDay(selectedDay);
-
-            // Mettre à jour l'état actif des boutons
-            dayButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-        });
+    const date = today.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
     });
+
+    const currentDayElement = document.getElementById('currentDay');
+    if (currentDayElement) {
+        currentDayElement.innerHTML = `📅 ${date.charAt(0).toUpperCase() + date.slice(1)}`;
+    }
 }
 
-// Sélectionner automatiquement le jour actuel
+// ============================================
+// SÉLECTION AUTOMATIQUE DU JOUR
+// ============================================
 function selectTodayAutomatically() {
     const days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
     const today = new Date();
@@ -47,9 +175,11 @@ function selectTodayAutomatically() {
     }
 }
 
-// Sélectionner un jour et afficher le programme
+// ============================================
+// SÉLECTION D'UN JOUR
+// ============================================
 function selectDay(day) {
-    currentDay = day;
+    AppState.currentDay = day;
     const workout = workoutProgram[day];
 
     if (!workout) {
@@ -58,39 +188,64 @@ function selectDay(day) {
     }
 
     displayWorkout(workout);
+    loadNotes(day);
+    updateDayButtons();
 }
 
-// Afficher le message "pas de programme"
+function updateDayButtons() {
+    document.querySelectorAll('.day-btn').forEach(btn => {
+        const day = btn.getAttribute('data-day');
+        btn.classList.toggle('active', day === AppState.currentDay);
+
+        // Badge de complétion
+        const badge = btn.querySelector('.day-badge');
+        const today = new Date().toISOString().split('T')[0];
+        if (badge && AppState.stats.completedDays[today]?.includes(day)) {
+            badge.classList.add('completed');
+        } else if (badge) {
+            badge.classList.remove('completed');
+        }
+    });
+}
+
+// ============================================
+// AFFICHAGE DU PROGRAMME
+// ============================================
 function displayNoWorkout() {
     const workoutDisplay = document.getElementById('workoutDisplay');
     workoutDisplay.innerHTML = `
-        <div class="no-workout">
-            <p>Aucun programme pour ce jour</p>
+        <div class="empty-state">
+            <span class="empty-icon">📋</span>
+            <h3>Aucun programme</h3>
+            <p>Aucun entraînement prévu pour ce jour</p>
         </div>
     `;
     document.getElementById('timerSection').style.display = 'none';
+    document.getElementById('notesSection').style.display = 'none';
+    document.getElementById('completeWorkout').style.display = 'none';
 }
 
-// Afficher le programme d'entraînement
 function displayWorkout(workout) {
     const workoutDisplay = document.getElementById('workoutDisplay');
 
-    let html = '';
+    AppState.completedExercises.clear();
 
-    workout.categories.forEach(category => {
+    let html = '';
+    workout.categories.forEach((category, catIndex) => {
         html += `
             <div class="workout-category">
-                <h2>${category.name}</h2>
+                <h2>${getCategoryIcon(category.name)} ${category.name}</h2>
                 <ul class="exercise-list">
         `;
 
-        category.exercises.forEach(exercise => {
+        category.exercises.forEach((exercise, exIndex) => {
+            const exerciseId = `${catIndex}-${exIndex}`;
             html += `
-                <li class="exercise-item">
-                    <div>
+                <li class="exercise-item" data-exercise="${exerciseId}">
+                    <div style="flex: 1;">
                         <div class="exercise-name">${exercise.name}</div>
-                        <div class="exercise-details">${exercise.details}</div>
                     </div>
+                    <div class="exercise-details">${exercise.details}</div>
                 </li>
             `;
         });
@@ -111,74 +266,386 @@ function displayWorkout(workout) {
 
     workoutDisplay.innerHTML = html;
 
-    // Afficher le timer si ce n'est pas un jour de repos
+    // Ajouter les event listeners pour marquer les exercices
+    document.querySelectorAll('.exercise-item').forEach(item => {
+        item.addEventListener('click', () => toggleExercise(item));
+    });
+
+    // Afficher les sections
     if (workout.rest) {
         document.getElementById('timerSection').style.display = 'block';
     } else {
         document.getElementById('timerSection').style.display = 'none';
     }
+
+    document.getElementById('notesSection').style.display = 'block';
+    document.getElementById('completeWorkout').style.display = 'block';
 }
 
-// Configuration du timer
-function setupTimer() {
-    const startButton = document.getElementById('startTimer');
-    const resetButton = document.getElementById('resetTimer');
-
-    startButton.addEventListener('click', toggleTimer);
-    resetButton.addEventListener('click', resetTimer);
+function getCategoryIcon(name) {
+    const icons = {
+        'Cardio': '🏃',
+        'Quadriceps': '🦵',
+        'Triceps': '💪',
+        'Abdos': '🎯',
+        'Dos': '🏋️',
+        'Pecs': '💪',
+        'Biceps': '💪',
+        'Épaules': '💪',
+        'Ischio-Fessiers': '🦵',
+        'Repos': '😴'
+    };
+    return icons[name] || '💪';
 }
 
-// Démarrer/Arrêter le timer
+function toggleExercise(element) {
+    element.classList.toggle('completed');
+    const exerciseId = element.getAttribute('data-exercise');
+
+    if (element.classList.contains('completed')) {
+        AppState.completedExercises.add(exerciseId);
+        playCompletionSound();
+    } else {
+        AppState.completedExercises.delete(exerciseId);
+    }
+}
+
+// ============================================
+// TIMER
+// ============================================
+function setTimerDuration(seconds) {
+    AppState.timerDuration = seconds;
+    AppState.timeRemaining = seconds;
+    displayTime(seconds);
+    updateTimerCircle(100);
+}
+
 function toggleTimer() {
     const startButton = document.getElementById('startTimer');
+    const buttonText = document.getElementById('timerButtonText');
 
-    if (timerInterval) {
-        // Arrêter le timer
-        clearInterval(timerInterval);
-        timerInterval = null;
-        startButton.textContent = 'Reprendre';
+    if (AppState.timerInterval) {
+        // Pause
+        clearInterval(AppState.timerInterval);
+        AppState.timerInterval = null;
+        buttonText.textContent = 'Reprendre';
     } else {
-        // Démarrer le timer
-        startButton.textContent = 'Pause';
-        timerInterval = setInterval(updateTimer, 1000);
+        // Start
+        buttonText.textContent = 'Pause';
+        AppState.timerInterval = setInterval(updateTimer, 1000);
     }
 }
 
-// Mettre à jour le timer
 function updateTimer() {
-    if (timeRemaining > 0) {
-        timeRemaining--;
-        displayTime(timeRemaining);
+    if (AppState.timeRemaining > 0) {
+        AppState.timeRemaining--;
+        displayTime(AppState.timeRemaining);
+
+        const percentage = (AppState.timeRemaining / AppState.timerDuration) * 100;
+        updateTimerCircle(percentage);
     } else {
         // Timer terminé
-        clearInterval(timerInterval);
-        timerInterval = null;
-        playSound();
-        alert('Temps de repos terminé ! 💪');
+        clearInterval(AppState.timerInterval);
+        AppState.timerInterval = null;
+        playTimerCompleteSound();
+        sendNotification('⏱️ Repos terminé !', 'C\'est reparti ! 💪');
         resetTimer();
+        showToast('Temps de repos terminé ! 💪');
     }
 }
 
-// Afficher le temps
 function displayTime(seconds) {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     const display = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-    document.getElementById('timerDisplay').textContent = display;
+    const timerDisplay = document.getElementById('timerDisplay');
+    if (timerDisplay) {
+        timerDisplay.textContent = display;
+    }
 }
 
-// Réinitialiser le timer
+function updateTimerCircle(percentage) {
+    const circle = document.getElementById('timerCircle');
+    if (circle) {
+        const circumference = 565.48;
+        const offset = circumference - (percentage / 100) * circumference;
+        circle.style.strokeDashoffset = offset;
+    }
+}
+
 function resetTimer() {
-    clearInterval(timerInterval);
-    timerInterval = null;
-    timeRemaining = 180; // 3 minutes
-    displayTime(timeRemaining);
-    document.getElementById('startTimer').textContent = 'Démarrer';
+    clearInterval(AppState.timerInterval);
+    AppState.timerInterval = null;
+    AppState.timeRemaining = AppState.timerDuration;
+    displayTime(AppState.timeRemaining);
+    updateTimerCircle(100);
+
+    const buttonText = document.getElementById('timerButtonText');
+    if (buttonText) buttonText.textContent = 'Démarrer';
 }
 
-// Jouer un son (notification)
-function playSound() {
-    // Créer un son simple avec l'API Audio
+function skipTimer() {
+    clearInterval(AppState.timerInterval);
+    AppState.timerInterval = null;
+    AppState.timeRemaining = 0;
+    displayTime(0);
+    updateTimerCircle(0);
+
+    const buttonText = document.getElementById('timerButtonText');
+    if (buttonText) buttonText.textContent = 'Démarrer';
+
+    showToast('Timer passé');
+}
+
+// ============================================
+// NOTES
+// ============================================
+function loadNotes(day) {
+    const today = new Date().toISOString().split('T')[0];
+    const notes = AppState.workoutData[today]?.[day]?.notes || '';
+    const textarea = document.getElementById('notesTextarea');
+    if (textarea) {
+        textarea.value = notes;
+    }
+}
+
+function saveNotes() {
+    const textarea = document.getElementById('notesTextarea');
+    const notes = textarea?.value || '';
+    const today = new Date().toISOString().split('T')[0];
+
+    if (!AppState.workoutData[today]) {
+        AppState.workoutData[today] = {};
+    }
+    if (!AppState.workoutData[today][AppState.currentDay]) {
+        AppState.workoutData[today][AppState.currentDay] = {};
+    }
+
+    AppState.workoutData[today][AppState.currentDay].notes = notes;
+    localStorage.setItem('workoutData', JSON.stringify(AppState.workoutData));
+
+    // Afficher confirmation
+    const saveIndicator = document.getElementById('notesSaved');
+    if (saveIndicator) {
+        saveIndicator.style.display = 'block';
+        setTimeout(() => {
+            saveIndicator.style.display = 'none';
+        }, 2000);
+    }
+
+    showToast('✓ Notes sauvegardées');
+}
+
+// ============================================
+// COMPLÉTION D'ENTRAÎNEMENT
+// ============================================
+function completeWorkout() {
+    const today = new Date().toISOString().split('T')[0];
+
+    // Sauvegarder la complétion
+    if (!AppState.stats.completedDays[today]) {
+        AppState.stats.completedDays[today] = [];
+    }
+
+    if (!AppState.stats.completedDays[today].includes(AppState.currentDay)) {
+        AppState.stats.completedDays[today].push(AppState.currentDay);
+        AppState.stats.totalWorkouts++;
+        AppState.stats.totalTime += 60; // Estimation de 60 minutes par séance
+        AppState.stats.lastWorkoutDate = today;
+
+        // Calculer la série
+        updateStreak();
+
+        // Sauvegarder
+        localStorage.setItem('stats', JSON.stringify(AppState.stats));
+
+        // Notification
+        sendNotification('🎉 Séance terminée !', 'Bravo ! Continue comme ça ! 💪');
+        showToast('🎉 Séance validée ! Excellent travail ! 💪');
+
+        // Confettis effect
+        playCompletionSound();
+
+        // Mettre à jour l'interface
+        updateStats();
+        updateDayButtons();
+    } else {
+        showToast('Séance déjà validée aujourd\'hui');
+    }
+}
+
+function updateStreak() {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    if (AppState.stats.completedDays[yesterdayStr] && AppState.stats.completedDays[yesterdayStr].length > 0) {
+        AppState.stats.currentStreak++;
+    } else if (!AppState.stats.completedDays[todayStr] || AppState.stats.completedDays[todayStr].length === 0) {
+        AppState.stats.currentStreak = 1;
+    }
+}
+
+// ============================================
+// STATISTIQUES
+// ============================================
+function updateStats() {
+    // Header stats
+    document.getElementById('totalWorkouts').textContent = AppState.stats.totalWorkouts;
+    document.getElementById('currentStreak').textContent = AppState.stats.currentStreak;
+
+    // Modal stats
+    document.getElementById('streakStat').textContent = AppState.stats.currentStreak;
+    document.getElementById('totalWorkoutsStat').textContent = AppState.stats.totalWorkouts;
+    document.getElementById('totalTimeStat').textContent = AppState.stats.totalTime;
+
+    // This week
+    const thisWeekCount = getThisWeekWorkouts();
+    document.getElementById('thisWeekStat').textContent = thisWeekCount;
+}
+
+function getThisWeekWorkouts() {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Lundi
+
+    let count = 0;
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(startOfWeek);
+        date.setDate(startOfWeek.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+
+        if (AppState.stats.completedDays[dateStr]) {
+            count += AppState.stats.completedDays[dateStr].length;
+        }
+    }
+    return count;
+}
+
+// ============================================
+// NAVIGATION
+// ============================================
+function handleNavigation(view) {
+    // Update active button
+    document.querySelectorAll('.footer-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.currentTarget.classList.add('active');
+
+    // Handle view
+    switch(view) {
+        case 'workout':
+            // Already on workout view
+            break;
+        case 'stats':
+            openModal('statsModal');
+            generateCalendar();
+            break;
+        case 'settings':
+            openModal('settingsModal');
+            break;
+    }
+}
+
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function generateCalendar() {
+    const calendar = document.getElementById('progressCalendar');
+    if (!calendar) return;
+
+    const today = new Date();
+    const last30Days = [];
+
+    for (let i = 29; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        last30Days.push(date);
+    }
+
+    let html = '<div style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px;">';
+
+    last30Days.forEach(date => {
+        const dateStr = date.toISOString().split('T')[0];
+        const hasWorkout = AppState.stats.completedDays[dateStr]?.length > 0;
+        const color = hasWorkout ? 'var(--success)' : 'var(--border-color)';
+        const title = `${date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}${hasWorkout ? ' ✓' : ''}`;
+
+        html += `<div style="width: 30px; height: 30px; background: ${color}; border-radius: 5px;" title="${title}"></div>`;
+    });
+
+    html += '</div>';
+    html += '<p style="margin-top: 15px; text-align: center; color: var(--text-secondary); font-size: 0.9em;">Vos 30 derniers jours</p>';
+
+    calendar.innerHTML = html;
+}
+
+// ============================================
+// DONNÉES
+// ============================================
+function exportData() {
+    const data = {
+        stats: AppState.stats,
+        workoutData: AppState.workoutData,
+        exportDate: new Date().toISOString()
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `musculs-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+
+    showToast('✓ Données exportées');
+}
+
+function resetData() {
+    if (confirm('Êtes-vous sûr de vouloir réinitialiser toutes les données ? Cette action est irréversible.')) {
+        localStorage.clear();
+        location.reload();
+    }
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+function requestNotificationPermission() {
+    if ('Notification' in window && AppState.notificationsEnabled) {
+        Notification.requestPermission();
+    }
+}
+
+function sendNotification(title, body) {
+    if ('Notification' in window && Notification.permission === 'granted' && AppState.notificationsEnabled) {
+        new Notification(title, {
+            body: body,
+            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💪</text></svg>',
+            badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💪</text></svg>'
+        });
+    }
+}
+
+// ============================================
+// SONS
+// ============================================
+function playCompletionSound() {
+    if (!AppState.soundEnabled) return;
+
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -189,33 +656,72 @@ function playSound() {
     oscillator.frequency.value = 800;
     oscillator.type = 'sine';
 
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
 
     oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.5);
+    oscillator.stop(audioContext.currentTime + 0.3);
 }
 
-// Sauvegarder la progression dans le localStorage
-function saveProgress(day, exerciseIndex) {
-    const progress = JSON.parse(localStorage.getItem('workoutProgress') || '{}');
-    const today = new Date().toISOString().split('T')[0];
+function playTimerCompleteSound() {
+    if (!AppState.soundEnabled) return;
 
-    if (!progress[today]) {
-        progress[today] = {};
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Jouer 3 bips
+    for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 1000;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }, i * 300);
     }
-
-    if (!progress[today][day]) {
-        progress[today][day] = [];
-    }
-
-    progress[today][day].push(exerciseIndex);
-    localStorage.setItem('workoutProgress', JSON.stringify(progress));
 }
 
-// Charger la progression
-function loadProgress() {
-    const progress = JSON.parse(localStorage.getItem('workoutProgress') || '{}');
-    const today = new Date().toISOString().split('T')[0];
-    return progress[today] || {};
+// ============================================
+// TOAST NOTIFICATIONS
+// ============================================
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    toast.textContent = message;
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
 }
+
+// ============================================
+// UTILITAIRES
+// ============================================
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Auto-save notes
+document.getElementById('notesTextarea')?.addEventListener('input', debounce(() => {
+    saveNotes();
+}, 1000));
+
+console.log('✅ Musculs Pro chargé avec succès');

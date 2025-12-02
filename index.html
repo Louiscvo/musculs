@@ -3,49 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Programme Musculation</title>
+    <meta name="description" content="Application professionnelle de suivi de programme de musculation avec timer, statistiques et suivi de progression">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>Musculs - Programme Pro</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💪</text></svg>">
+
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💪</text></svg>">
+
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Mode Sombre Toggle -->
+    <button class="theme-toggle" id="themeToggle" aria-label="Changer de thème">
+        <span class="theme-icon">🌙</span>
+    </button>
+
     <div class="container">
-        <header>
-            <h1>💪 Mon Programme Musculation</h1>
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo">💪</div>
+                    <div>
+                        <h1>Musculs Pro</h1>
+                        <p class="subtitle">Votre coach personnel</p>
+                    </div>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalWorkouts">0</span>
+                        <span class="stat-label">Séances</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="currentStreak">0</span>
+                        <span class="stat-label">Série</span>
+                    </div>
+                </div>
+            </div>
             <div class="current-day" id="currentDay"></div>
         </header>
 
+        <!-- Navigation par jour -->
         <nav class="day-selector">
-            <button class="day-btn" data-day="lundi">Lundi</button>
-            <button class="day-btn" data-day="mardi">Mardi</button>
-            <button class="day-btn" data-day="mercredi">Mercredi</button>
-            <button class="day-btn" data-day="jeudi">Jeudi</button>
-            <button class="day-btn" data-day="vendredi">Vendredi</button>
-            <button class="day-btn" data-day="samedi">Samedi</button>
-            <button class="day-btn" data-day="dimanche">Dimanche</button>
+            <button class="day-btn" data-day="lundi">
+                <span class="day-name">Lun</span>
+                <span class="day-badge" data-badge="lundi"></span>
+            </button>
+            <button class="day-btn" data-day="mardi">
+                <span class="day-name">Mar</span>
+                <span class="day-badge" data-badge="mardi"></span>
+            </button>
+            <button class="day-btn" data-day="mercredi">
+                <span class="day-name">Mer</span>
+                <span class="day-badge" data-badge="mercredi"></span>
+            </button>
+            <button class="day-btn" data-day="jeudi">
+                <span class="day-name">Jeu</span>
+                <span class="day-badge" data-badge="jeudi"></span>
+            </button>
+            <button class="day-btn" data-day="vendredi">
+                <span class="day-name">Ven</span>
+                <span class="day-badge" data-badge="vendredi"></span>
+            </button>
+            <button class="day-btn" data-day="samedi">
+                <span class="day-name">Sam</span>
+                <span class="day-badge" data-badge="samedi"></span>
+            </button>
+            <button class="day-btn" data-day="dimanche">
+                <span class="day-name">Dim</span>
+                <span class="day-badge" data-badge="dimanche"></span>
+            </button>
         </nav>
 
+        <!-- Section principale -->
         <main>
+            <!-- Affichage du programme -->
             <div class="workout-display" id="workoutDisplay">
                 <div class="no-workout">
-                    <p>Sélectionnez un jour pour voir votre programme</p>
+                    <div class="empty-state">
+                        <span class="empty-icon">📋</span>
+                        <h3>Sélectionnez un jour</h3>
+                        <p>Choisissez un jour de la semaine pour voir votre programme</p>
+                    </div>
                 </div>
             </div>
 
+            <!-- Timer de repos -->
             <div class="timer-section" id="timerSection" style="display: none;">
-                <h3>⏱️ Timer de Repos</h3>
-                <div class="timer-display" id="timerDisplay">3:00</div>
-                <div class="timer-controls">
-                    <button class="btn btn-primary" id="startTimer">Démarrer</button>
-                    <button class="btn btn-secondary" id="resetTimer">Réinitialiser</button>
+                <div class="timer-header">
+                    <h3>⏱️ Timer de Repos</h3>
+                    <div class="timer-presets">
+                        <button class="preset-btn" data-time="60">1 min</button>
+                        <button class="preset-btn" data-time="90">1:30</button>
+                        <button class="preset-btn active" data-time="180">3 min</button>
+                        <button class="preset-btn" data-time="300">5 min</button>
+                    </div>
                 </div>
+                <div class="timer-circle">
+                    <svg class="timer-svg" viewBox="0 0 200 200">
+                        <circle class="timer-bg" cx="100" cy="100" r="90"></circle>
+                        <circle class="timer-progress" cx="100" cy="100" r="90" id="timerCircle"></circle>
+                    </svg>
+                    <div class="timer-display" id="timerDisplay">3:00</div>
+                </div>
+                <div class="timer-controls">
+                    <button class="btn btn-icon btn-secondary" id="resetTimer" title="Réinitialiser">
+                        <span>↺</span>
+                    </button>
+                    <button class="btn btn-primary btn-large" id="startTimer">
+                        <span id="timerButtonText">Démarrer</span>
+                    </button>
+                    <button class="btn btn-icon btn-secondary" id="skipTimer" title="Passer">
+                        <span>⏭</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Section Notes -->
+            <div class="notes-section" id="notesSection" style="display: none;">
+                <div class="notes-header">
+                    <h3>📝 Notes de séance</h3>
+                    <button class="btn btn-small" id="saveNotes">Sauvegarder</button>
+                </div>
+                <textarea class="notes-textarea" id="notesTextarea" placeholder="Ajoutez vos notes ici... (poids utilisés, sensations, etc.)"></textarea>
+                <div class="notes-saved" id="notesSaved" style="display: none;">✓ Notes sauvegardées</div>
             </div>
         </main>
 
-        <footer>
-            <p>Programme de musculation personnalisé</p>
+        <!-- Bouton flottant pour marquer la séance terminée -->
+        <button class="fab" id="completeWorkout" style="display: none;" title="Marquer comme terminé">
+            <span>✓</span>
+        </button>
+
+        <footer class="app-footer">
+            <div class="footer-nav">
+                <button class="footer-btn active" data-view="workout">
+                    <span class="footer-icon">🏋️</span>
+                    <span>Programme</span>
+                </button>
+                <button class="footer-btn" data-view="stats">
+                    <span class="footer-icon">📊</span>
+                    <span>Stats</span>
+                </button>
+                <button class="footer-btn" data-view="settings">
+                    <span class="footer-icon">⚙️</span>
+                    <span>Réglages</span>
+                </button>
+            </div>
         </footer>
     </div>
 
+    <!-- Modal Statistiques -->
+    <div class="modal" id="statsModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📊 Vos Statistiques</h2>
+                <button class="modal-close" data-modal="statsModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="streakStat">0</div>
+                            <div class="stat-text">Jours consécutifs</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💪</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalWorkoutsStat">0</div>
+                            <div class="stat-text">Séances totales</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalTimeStat">0</div>
+                            <div class="stat-text">Minutes d'entraînement</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="thisWeekStat">0</div>
+                            <div class="stat-text">Cette semaine</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-calendar" id="progressCalendar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Réglages -->
+    <div class="modal" id="settingsModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Réglages</h2>
+                <button class="modal-close" data-modal="settingsModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-group">
+                    <h3>Notifications</h3>
+                    <label class="switch-label">
+                        <input type="checkbox" id="notificationsToggle" checked>
+                        <span class="switch"></span>
+                        <span>Activer les notifications</span>
+                    </label>
+                    <label class="switch-label">
+                        <input type="checkbox" id="soundToggle" checked>
+                        <span class="switch"></span>
+                        <span>Sons du timer</span>
+                    </label>
+                </div>
+                <div class="settings-group">
+                    <h3>Données</h3>
+                    <button class="btn btn-secondary btn-full" id="exportData">📥 Exporter les données</button>
+                    <button class="btn btn-outline btn-full" id="resetData">🗑️ Réinitialiser</button>
+                </div>
+                <div class="settings-group">
+                    <h3>À propos</h3>
+                    <p class="about-text">Musculs Pro v2.0</p>
+                    <p class="about-text small">Application de suivi de musculation</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Scripts -->
     <script src="data.js"></script>
     <script src="app.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker enregistré', reg))
+                .catch(err => console.log('Erreur Service Worker', err));
+        }
+    </script>
 </body>
 </html>

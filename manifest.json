@@ -1,0 +1,56 @@
+{
+  "name": "Musculs Pro - Programme Musculation",
+  "short_name": "Musculs",
+  "description": "Application professionnelle de suivi de programme de musculation",
+  "start_url": "/musculs/",
+  "scope": "/musculs/",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23667eea' rx='40'/><text x='96' y='140' text-anchor='middle' font-size='120' fill='white'>💪</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23667eea' rx='100'/><text x='256' y='380' text-anchor='middle' font-size='320' fill='white'>💪</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "fitness", "lifestyle"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Aujourd'hui",
+      "short_name": "Aujourd'hui",
+      "description": "Voir le programme du jour",
+      "url": "/musculs/",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><text y='.9em' font-size='90'>📅</text></svg>",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Statistiques",
+      "short_name": "Stats",
+      "description": "Voir mes statistiques",
+      "url": "/musculs/?view=stats",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><text y='.9em' font-size='90'>📊</text></svg>",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "lang": "fr-FR",
+  "dir": "ltr"
+}
