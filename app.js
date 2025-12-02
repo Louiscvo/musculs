@@ -167,7 +167,12 @@ function displayCurrentDay() {
 function selectTodayAutomatically() {
     const days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
     const today = new Date();
-    const dayName = days[today.getDay()];
+    let dayName = days[today.getDay()];
+
+    // Si c'est samedi ou dimanche, afficher weekend
+    if (dayName === 'samedi' || dayName === 'dimanche') {
+        dayName = 'weekend';
+    }
 
     const todayButton = document.querySelector(`[data-day="${dayName}"]`);
     if (todayButton) {
@@ -241,7 +246,8 @@ function displayWorkout(workout) {
         category.exercises.forEach((exercise, exIndex) => {
             const exerciseId = `${catIndex}-${exIndex}`;
             html += `
-                <li class="exercise-item" data-exercise="${exerciseId}">
+                <li class="exercise-item" data-exercise="${exerciseId}" draggable="true">
+                    <span class="drag-handle">⋮⋮</span>
                     <div style="flex: 1;">
                         <div class="exercise-name">${exercise.name}</div>
                     </div>
@@ -268,7 +274,19 @@ function displayWorkout(workout) {
 
     // Ajouter les event listeners pour marquer les exercices
     document.querySelectorAll('.exercise-item').forEach(item => {
-        item.addEventListener('click', () => toggleExercise(item));
+        // Click sur l'exercice (sauf sur le handle)
+        item.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('drag-handle')) {
+                toggleExercise(item);
+            }
+        });
+
+        // Drag & Drop
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+        item.addEventListener('dragover', handleDragOver);
+        item.addEventListener('drop', handleDrop);
+        item.addEventListener('dragleave', handleDragLeave);
     });
 
     // Afficher les sections
@@ -723,5 +741,65 @@ function debounce(func, wait) {
 document.getElementById('notesTextarea')?.addEventListener('input', debounce(() => {
     saveNotes();
 }, 1000));
+
+// ============================================
+// DRAG & DROP
+// ============================================
+let draggedElement = null;
+
+function handleDragStart(e) {
+    draggedElement = e.currentTarget;
+    e.currentTarget.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+}
+
+function handleDragEnd(e) {
+    e.currentTarget.classList.remove('dragging');
+
+    // Retirer tous les indicateurs de survol
+    document.querySelectorAll('.exercise-item').forEach(item => {
+        item.classList.remove('drag-over');
+    });
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+
+    const dropTarget = e.currentTarget;
+
+    if (draggedElement !== dropTarget) {
+        // Récupérer le parent (la liste)
+        const list = dropTarget.parentNode;
+
+        // Insérer l'élément déplacé avant l'élément cible
+        if (draggedElement.compareDocumentPosition(dropTarget) & Node.DOCUMENT_POSITION_FOLLOWING) {
+            list.insertBefore(draggedElement, dropTarget);
+        } else {
+            list.insertBefore(draggedElement, dropTarget.nextSibling);
+        }
+
+        showToast('✓ Ordre modifié');
+        playCompletionSound();
+    }
+
+    dropTarget.classList.remove('drag-over');
+    return false;
+}
+
+function handleDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+}
 
 console.log('✅ Musculs Pro chargé avec succès');

@@ -265,6 +265,23 @@ body {
     content: '✓';
 }
 
+.day-btn-rest {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-color: transparent;
+}
+
+.day-btn-rest:hover {
+    background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+}
+
+.day-btn-rest .rest-label {
+    display: block;
+    font-size: 0.75em;
+    opacity: 0.9;
+    margin-top: 2px;
+}
+
 /* ============================================
    MAIN CONTENT
    ============================================ */
@@ -361,8 +378,36 @@ main {
     align-items: center;
     gap: 15px;
     transition: var(--transition);
-    cursor: pointer;
+    cursor: grab;
     border: 2px solid transparent;
+    position: relative;
+}
+
+.exercise-item:active {
+    cursor: grabbing;
+}
+
+.exercise-item.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.exercise-item.drag-over {
+    border-top: 3px solid var(--primary);
+    margin-top: 10px;
+}
+
+.drag-handle {
+    color: var(--text-secondary);
+    font-size: 1.2em;
+    cursor: grab;
+    padding: 5px;
+    margin-right: 5px;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
 }
 
 .exercise-item:hover {

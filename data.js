@@ -161,5 +161,18 @@ const workoutProgram = {
                 ]
             }
         ]
+    },
+    weekend: {
+        name: "Weekend",
+        categories: [
+            {
+                name: "Repos",
+                exercises: [
+                    { name: "Weekend de repos", details: "Récupération complète" },
+                    { name: "Étirements légers", details: "10-15 minutes" },
+                    { name: "Marche ou activité douce", details: "Optionnel" }
+                ]
+            }
+        ]
     }
 };
