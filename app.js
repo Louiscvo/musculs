@@ -965,4 +965,382 @@ function handleDragLeave(e) {
     e.currentTarget.classList.remove('drag-forbidden');
 }
 
-console.log('✅ Musculs Pro chargé avec succès');
+// ============================================
+// NOUVELLES FONCTIONNALITÉS V3.0
+// ============================================
+
+// État pour les nouvelles fonctionnalités
+const V3State = {
+    weights: JSON.parse(localStorage.getItem('weights')) || {},
+    photos: JSON.parse(localStorage.getItem('photos')) || [],
+    achievements: JSON.parse(localStorage.getItem('achievements')) || {}
+};
+
+// Liste des achievements
+const ACHIEVEMENTS = [
+    { id: 'first_workout', name: 'Première séance', icon: '🎯', description: 'Compléter votre première séance', check: () => AppState.stats.totalWorkouts >= 1 },
+    { id: 'week_warrior', name: 'Guerrier hebdo', icon: '💪', description: '5 séances en une semaine', check: () => AppState.stats.thisWeekStat >= 5 },
+    { id: 'streak_3', name: 'Régulier', icon: '🔥', description: '3 jours consécutifs', check: () => AppState.stats.currentStreak >= 3 },
+    { id: 'streak_7', name: 'Déterminé', icon: '⚡', description: '7 jours consécutifs', check: () => AppState.stats.currentStreak >= 7 },
+    { id: 'streak_30', name: 'Légendaire', icon: '👑', description: '30 jours consécutifs', check: () => AppState.stats.currentStreak >= 30 },
+    { id: 'workout_10', name: 'Motivé', icon: '🎖️', description: '10 séances totales', check: () => AppState.stats.totalWorkouts >= 10 },
+    { id: 'workout_50', name: 'Athlète', icon: '🏋️', description: '50 séances totales', check: () => AppState.stats.totalWorkouts >= 50 },
+    { id: 'workout_100', name: 'Champion', icon: '🏆', description: '100 séances totales', check: () => AppState.stats.totalWorkouts >= 100 },
+    { id: 'weight_record', name: 'Premier record', icon: '📈', description: 'Enregistrer un poids', check: () => Object.keys(V3State.weights).length > 0 },
+    { id: 'progress_photo', name: 'Transformation', icon: '📸', description: 'Ajouter une photo', check: () => V3State.photos.length > 0 },
+    { id: 'early_bird', name: 'Lève-tôt', icon: '🌅', description: 'Séance avant 8h', check: () => false }, // À implémenter
+    { id: 'night_owl', name: 'Noctambule', icon: '🌙', description: 'Séance après 22h', check: () => false }, // À implémenter
+    { id: 'all_exercises', name: 'Complet', icon: '✨', description: 'Tous les exercices complétés', check: () => false }, // À implémenter
+    { id: 'heavy_lifter', name: 'Force pure', icon: '💥', description: '100kg+ sur un exercice', check: () => {
+        return Object.values(V3State.weights).some(records =>
+            records.some(r => r.weight >= 100)
+        );
+    }},
+    { id: 'dedicated', name: 'Dévoué', icon: '🎓', description: '6 mois d\'entraînement', check: () => AppState.stats.totalWorkouts >= 80 }
+];
+
+// ============================================
+// NAVIGATION FOOTER
+// ============================================
+document.querySelectorAll('.footer-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const view = btn.getAttribute('data-view');
+
+        // Update active button
+        document.querySelectorAll('.footer-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Show corresponding modal
+        if (view === 'workout') {
+            closeAllModals();
+        } else if (view === 'progress') {
+            showProgressModal();
+        } else if (view === 'stats') {
+            showModal('statsModal');
+        } else if (view === 'achievements') {
+            showAchievementsModal();
+        } else if (view === 'settings') {
+            showModal('settingsModal');
+        }
+    });
+});
+
+// ============================================
+// MODAL PROGRESSION
+// ============================================
+function showProgressModal() {
+    populateExerciseSelect();
+    showModal('progressModal');
+}
+
+function populateExerciseSelect() {
+    const select = document.getElementById('exerciseSelect');
+    select.innerHTML = '<option value="">-- Choisir un exercice --</option>';
+
+    Object.values(workoutProgram).forEach(day => {
+        if (day.categories) {
+            day.categories.forEach(cat => {
+                cat.exercises.forEach(ex => {
+                    const optionValue = `${day.name}|${cat.name}|${ex.name}`;
+                    select.innerHTML += `<option value="${optionValue}">${ex.name} (${cat.name})</option>`;
+                });
+            });
+        }
+    });
+}
+
+document.getElementById('exerciseSelect')?.addEventListener('change', (e) => {
+    const value = e.target.value;
+    if (value) {
+        const [day, category, exercise] = value.split('|');
+        displayWeightHistory(exercise);
+        document.getElementById('addWeightSection').style.display = 'block';
+    } else {
+        document.getElementById('weightHistory').innerHTML = '';
+        document.getElementById('addWeightSection').style.display = 'none';
+    }
+});
+
+function displayWeightHistory(exercise) {
+    const container = document.getElementById('weightHistory');
+    const records = V3State.weights[exercise] || [];
+
+    if (records.length === 0) {
+        container.innerHTML = '<div class="empty-state-small"><span>💪</span><p>Aucun record pour cet exercice</p></div>';
+        return;
+    }
+
+    container.innerHTML = records.map((record, index) => `
+        <div class="weight-record">
+            <div class="weight-record-info">
+                <div class="weight-record-value">${record.weight} kg × ${record.reps} reps</div>
+                <div class="weight-record-date">${new Date(record.date).toLocaleDateString('fr-FR')}</div>
+            </div>
+            <button class="weight-record-delete" onclick="deleteWeightRecord('${exercise}', ${index})">🗑️</button>
+        </div>
+    `).reverse().join('');
+}
+
+document.getElementById('saveWeight')?.addEventListener('click', () => {
+    const select = document.getElementById('exerciseSelect');
+    const weight = parseFloat(document.getElementById('weightInput').value);
+    const reps = parseInt(document.getElementById('repsInput').value);
+
+    if (!select.value || !weight || !reps) {
+        showToast('❌ Remplissez tous les champs');
+        return;
+    }
+
+    const [day, category, exercise] = select.value.split('|');
+
+    if (!V3State.weights[exercise]) {
+        V3State.weights[exercise] = [];
+    }
+
+    V3State.weights[exercise].push({
+        weight,
+        reps,
+        date: Date.now()
+    });
+
+    localStorage.setItem('weights', JSON.stringify(V3State.weights));
+    displayWeightHistory(exercise);
+
+    document.getElementById('weightInput').value = '';
+    document.getElementById('repsInput').value = '';
+
+    showToast('💪 Record sauvegardé !');
+    checkAchievements();
+
+    vibrate(50);
+});
+
+function deleteWeightRecord(exercise, index) {
+    V3State.weights[exercise].splice(index, 1);
+    localStorage.setItem('weights', JSON.stringify(V3State.weights));
+    displayWeightHistory(exercise);
+    showToast('🗑️ Record supprimé');
+}
+
+// ============================================
+// TABS
+// ============================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        const modal = btn.closest('.modal');
+
+        // Update tabs
+        modal.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update content
+        modal.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        modal.querySelector(`#${tab}Tab`).classList.add('active');
+
+        if (tab === 'charts') {
+            drawSimpleChart();
+        } else if (tab === 'photos') {
+            displayPhotoGallery();
+        }
+    });
+});
+
+// ============================================
+// SIMPLE CHART (Sans bibliothèque)
+// ============================================
+function drawSimpleChart() {
+    const canvas = document.getElementById('progressChart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = 300;
+
+    // Simple placeholder chart
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary');
+    ctx.font = '16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('📊 Graphique de progression', canvas.width / 2, canvas.height / 2);
+    ctx.fillText('Ajoutez plus de records pour voir votre évolution', canvas.width / 2, canvas.height / 2 + 30);
+
+    // Calculate stats
+    const select = document.getElementById('exerciseSelect');
+    if (select.value) {
+        const [day, category, exercise] = select.value.split('|');
+        const records = V3State.weights[exercise] || [];
+
+        if (records.length > 0) {
+            const latest = records[records.length - 1];
+            const first = records[0];
+            const progress = ((latest.weight - first.weight) / first.weight * 100).toFixed(1);
+            const maxWeight = Math.max(...records.map(r => r.weight));
+
+            document.getElementById('totalProgress').textContent = `+${progress}%`;
+            document.getElementById('personalRecord').textContent = `${maxWeight}kg`;
+        }
+    }
+}
+
+// ============================================
+// GALERIE PHOTOS
+// ============================================
+document.getElementById('addPhoto')?.addEventListener('click', () => {
+    document.getElementById('photoInput').click();
+});
+
+document.getElementById('photoInput')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        V3State.photos.push({
+            data: event.target.result,
+            date: Date.now()
+        });
+
+        localStorage.setItem('photos', JSON.stringify(V3State.photos));
+        displayPhotoGallery();
+        showToast('📸 Photo ajoutée !');
+        checkAchievements();
+    };
+    reader.readAsDataURL(file);
+});
+
+function displayPhotoGallery() {
+    const container = document.getElementById('photoGallery');
+    if (!container) return;
+
+    if (V3State.photos.length === 0) {
+        container.innerHTML = '<div class="empty-state-small"><span>📸</span><p>Aucune photo ajoutée</p></div>';
+        return;
+    }
+
+    container.innerHTML = V3State.photos.map((photo, index) => `
+        <div class="photo-item">
+            <img src="${photo.data}" alt="Progress photo">
+            <div class="photo-item-date">${new Date(photo.date).toLocaleDateString('fr-FR')}</div>
+            <button class="photo-item-delete" onclick="deletePhoto(${index})">×</button>
+        </div>
+    `).reverse().join('');
+}
+
+function deletePhoto(index) {
+    V3State.photos.splice(index, 1);
+    localStorage.setItem('photos', JSON.stringify(V3State.photos));
+    displayPhotoGallery();
+    showToast('🗑️ Photo supprimée');
+}
+
+// ============================================
+// ACHIEVEMENTS
+// ============================================
+function showAchievementsModal() {
+    updateAchievementsDisplay();
+    showModal('achievementsModal');
+}
+
+function checkAchievements() {
+    let unlocked = 0;
+    ACHIEVEMENTS.forEach(achievement => {
+        if (!V3State.achievements[achievement.id] && achievement.check()) {
+            V3State.achievements[achievement.id] = Date.now();
+            localStorage.setItem('achievements', JSON.stringify(V3State.achievements));
+            showAchievementUnlocked(achievement);
+            unlocked++;
+        }
+    });
+
+    if (unlocked > 0) {
+        updateAchievementsDisplay();
+    }
+}
+
+function showAchievementUnlocked(achievement) {
+    showToast(`🏆 Badge débloqué: ${achievement.name}`);
+    vibrate([50, 30, 50, 30, 50]);
+
+    // Confetti
+    for (let i = 0; i < 15; i++) {
+        setTimeout(() => {
+            createConfetti(
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerHeight / 2
+            );
+        }, i * 50);
+    }
+}
+
+function updateAchievementsDisplay() {
+    const unlockedCount = Object.keys(V3State.achievements).length;
+    const totalBadges = ACHIEVEMENTS.length;
+    const percentage = (unlockedCount / totalBadges * 100).toFixed(0);
+
+    document.getElementById('unlockedCount').textContent = unlockedCount;
+    document.getElementById('totalBadges').textContent = totalBadges;
+    document.getElementById('achievementProgress').style.width = percentage + '%';
+
+    const grid = document.getElementById('achievementsGrid');
+    grid.innerHTML = ACHIEVEMENTS.map(achievement => {
+        const isUnlocked = V3State.achievements[achievement.id];
+        const unlockedDate = isUnlocked ? new Date(isUnlocked).toLocaleDateString('fr-FR') : '';
+
+        return `
+            <div class="achievement-card ${isUnlocked ? 'unlocked' : 'locked'}">
+                <span class="achievement-icon">${achievement.icon}</span>
+                <div class="achievement-name">${achievement.name}</div>
+                <div class="achievement-description">${achievement.description}</div>
+                ${isUnlocked ? `<div class="achievement-unlocked-date">Débloqué le ${unlockedDate}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+// Check achievements au démarrage et après chaque séance
+checkAchievements();
+
+// ============================================
+// CALCULATEUR 1RM
+// ============================================
+document.getElementById('openCalculator')?.addEventListener('click', () => {
+    showModal('calculatorModal');
+});
+
+document.getElementById('calculate1RM')?.addEventListener('click', () => {
+    const weight = parseFloat(document.getElementById('calc1rmWeight').value);
+    const reps = parseInt(document.getElementById('calc1rmReps').value);
+
+    if (!weight || !reps || reps < 1) {
+        showToast('❌ Entrez des valeurs valides');
+        return;
+    }
+
+    // Formule de Brzycki
+    const oneRM = weight / (1.0278 - 0.0278 * reps);
+
+    document.getElementById('rm1Value').textContent = Math.round(oneRM) + ' kg';
+    document.getElementById('rm95').textContent = Math.round(oneRM * 0.95) + ' kg';
+    document.getElementById('rm90').textContent = Math.round(oneRM * 0.90) + ' kg';
+    document.getElementById('rm85').textContent = Math.round(oneRM * 0.85) + ' kg';
+    document.getElementById('rm80').textContent = Math.round(oneRM * 0.80) + ' kg';
+    document.getElementById('rm75').textContent = Math.round(oneRM * 0.75) + ' kg';
+
+    document.getElementById('calculator1RMResult').style.display = 'block';
+
+    vibrate(50);
+});
+
+// ============================================
+// OVERRIDE completeWorkout pour vérifier achievements
+// ============================================
+const originalCompleteWorkout = completeWorkout;
+completeWorkout = function() {
+    originalCompleteWorkout();
+    setTimeout(() => {
+        checkAchievements();
+    }, 500);
+};
+
+console.log('✅ Musculs Pro V3.0 Ultimate Edition chargé avec succès');

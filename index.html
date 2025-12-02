@@ -145,13 +145,21 @@
                     <span class="footer-icon">🏋️</span>
                     <span>Programme</span>
                 </button>
+                <button class="footer-btn" data-view="progress">
+                    <span class="footer-icon">📈</span>
+                    <span>Progression</span>
+                </button>
                 <button class="footer-btn" data-view="stats">
                     <span class="footer-icon">📊</span>
                     <span>Stats</span>
                 </button>
+                <button class="footer-btn" data-view="achievements">
+                    <span class="footer-icon">🏆</span>
+                    <span>Badges</span>
+                </button>
                 <button class="footer-btn" data-view="settings">
                     <span class="footer-icon">⚙️</span>
-                    <span>Réglages</span>
+                    <span>Plus</span>
                 </button>
             </div>
         </footer>
@@ -222,14 +230,154 @@
                     </label>
                 </div>
                 <div class="settings-group">
+                    <h3>Outils</h3>
+                    <button class="btn btn-primary btn-full" id="openCalculator">🧮 Calculateur 1RM</button>
+                </div>
+                <div class="settings-group">
                     <h3>Données</h3>
                     <button class="btn btn-secondary btn-full" id="exportData">📥 Exporter les données</button>
                     <button class="btn btn-outline btn-full" id="resetData">🗑️ Réinitialiser</button>
                 </div>
                 <div class="settings-group">
                     <h3>À propos</h3>
-                    <p class="about-text">Musculs Pro v2.0</p>
-                    <p class="about-text small">Application de suivi de musculation</p>
+                    <p class="about-text">Musculs Pro v3.0 - Ultimate Edition</p>
+                    <p class="about-text small">Application complète de suivi de musculation</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Progression -->
+    <div class="modal" id="progressModal" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>📈 Ma Progression</h2>
+                <button class="modal-close" data-modal="progressModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="progress-tabs">
+                    <button class="tab-btn active" data-tab="weights">💪 Poids</button>
+                    <button class="tab-btn" data-tab="charts">📊 Graphiques</button>
+                    <button class="tab-btn" data-tab="photos">📸 Photos</button>
+                </div>
+
+                <!-- Tab: Poids -->
+                <div class="tab-content active" id="weightsTab">
+                    <div class="weight-selector">
+                        <label>Sélectionner un exercice :</label>
+                        <select id="exerciseSelect" class="exercise-select">
+                            <option value="">-- Choisir --</option>
+                        </select>
+                    </div>
+                    <div id="weightHistory" class="weight-history"></div>
+                    <div class="add-weight-section" id="addWeightSection" style="display: none;">
+                        <h3>Ajouter un record</h3>
+                        <div class="weight-input-group">
+                            <input type="number" id="weightInput" placeholder="Poids (kg)" step="0.5">
+                            <input type="number" id="repsInput" placeholder="Reps" step="1">
+                            <button class="btn btn-primary" id="saveWeight">💾 Sauvegarder</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Graphiques -->
+                <div class="tab-content" id="chartsTab">
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                    <div class="stats-summary">
+                        <div class="stat-card-mini">
+                            <div class="stat-label">Progression totale</div>
+                            <div class="stat-value-big" id="totalProgress">+0%</div>
+                        </div>
+                        <div class="stat-card-mini">
+                            <div class="stat-label">Record personnel</div>
+                            <div class="stat-value-big" id="personalRecord">0kg</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Photos -->
+                <div class="tab-content" id="photosTab">
+                    <div class="photo-upload">
+                        <button class="btn btn-primary btn-full" id="addPhoto">📷 Ajouter une photo</button>
+                        <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                    </div>
+                    <div class="photo-gallery" id="photoGallery"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Achievements -->
+    <div class="modal" id="achievementsModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏆 Badges & Achievements</h2>
+                <button class="modal-close" data-modal="achievementsModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="achievements-summary">
+                    <div class="achievement-count">
+                        <span class="count-number" id="unlockedCount">0</span>
+                        <span class="count-label">/ <span id="totalBadges">15</span> débloqués</span>
+                    </div>
+                    <div class="achievement-progress-bar">
+                        <div class="achievement-progress-fill" id="achievementProgress"></div>
+                    </div>
+                </div>
+                <div class="achievements-grid" id="achievementsGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Calculateur 1RM -->
+    <div class="modal" id="calculatorModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🧮 Calculateur 1RM</h2>
+                <button class="modal-close" data-modal="calculatorModal">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="calculator-description">Calculez votre charge maximale théorique (1 Rep Max)</p>
+                <div class="calculator-inputs">
+                    <div class="input-group">
+                        <label>Poids soulevé (kg)</label>
+                        <input type="number" id="calc1rmWeight" placeholder="100" step="0.5">
+                    </div>
+                    <div class="input-group">
+                        <label>Nombre de répétitions</label>
+                        <input type="number" id="calc1rmReps" placeholder="10" step="1" min="1" max="15">
+                    </div>
+                    <button class="btn btn-primary btn-full" id="calculate1RM">Calculer</button>
+                </div>
+                <div class="calculator-result" id="calculator1RMResult" style="display: none;">
+                    <div class="result-main">
+                        <div class="result-label">Votre 1RM estimé</div>
+                        <div class="result-value" id="rm1Value">0 kg</div>
+                    </div>
+                    <div class="percentage-table">
+                        <div class="percentage-row">
+                            <span>95% (1-2 reps)</span>
+                            <span id="rm95">0 kg</span>
+                        </div>
+                        <div class="percentage-row">
+                            <span>90% (3-4 reps)</span>
+                            <span id="rm90">0 kg</span>
+                        </div>
+                        <div class="percentage-row">
+                            <span>85% (5-6 reps)</span>
+                            <span id="rm85">0 kg</span>
+                        </div>
+                        <div class="percentage-row">
+                            <span>80% (7-8 reps)</span>
+                            <span id="rm80">0 kg</span>
+                        </div>
+                        <div class="percentage-row">
+                            <span>75% (9-10 reps)</span>
+                            <span id="rm75">0 kg</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

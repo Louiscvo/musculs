@@ -1180,3 +1180,542 @@ html {
 .exercise-item.just-dropped {
     animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
+
+/* ============================================
+   NOUVELLES FONCTIONNALITÉS V3.0
+   ============================================ */
+
+/* Footer avec 5 boutons */
+.app-footer {
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.footer-nav {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+}
+
+.footer-btn {
+    font-size: 0.75em;
+    padding: 8px 4px;
+}
+
+.footer-icon {
+    font-size: 1.3em;
+}
+
+/* Modal Large */
+.modal-large {
+    max-width: 95%;
+    width: 800px;
+}
+
+/* Tabs Navigation */
+.progress-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: var(--transition);
+}
+
+.tab-btn:hover {
+    color: var(--primary);
+    background: var(--bg-tertiary);
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Weight History */
+.weight-selector {
+    margin-bottom: 20px;
+}
+
+.weight-selector label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.exercise-select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 1em;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.exercise-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.weight-history {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.weight-record {
+    background: var(--bg-secondary);
+    padding: 15px;
+    border-radius: var(--radius-md);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 2px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.weight-record:hover {
+    border-color: var(--primary);
+    transform: translateX(5px);
+}
+
+.weight-record-info {
+    flex: 1;
+}
+
+.weight-record-value {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.weight-record-date {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+.weight-record-delete {
+    background: var(--danger);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.weight-record-delete:hover {
+    background: #e53e3e;
+    transform: scale(1.05);
+}
+
+.add-weight-section {
+    margin-top: 20px;
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 2px dashed var(--border-color);
+}
+
+.add-weight-section h3 {
+    margin-bottom: 15px;
+    color: var(--text-primary);
+}
+
+.weight-input-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+}
+
+.weight-input-group input {
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 1em;
+}
+
+.weight-input-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Charts */
+.chart-container {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    margin-bottom: 20px;
+    min-height: 300px;
+}
+
+.stats-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.stat-card-mini {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    text-align: center;
+    color: white;
+}
+
+.stat-label {
+    font-size: 0.9em;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.stat-value-big {
+    font-size: 2em;
+    font-weight: 700;
+}
+
+/* Photo Gallery */
+.photo-upload {
+    margin-bottom: 20px;
+}
+
+.photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.photo-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.photo-item:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-lg);
+}
+
+.photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-item-date {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    color: white;
+    padding: 8px;
+    font-size: 0.75em;
+    text-align: center;
+}
+
+.photo-item-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--danger);
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.photo-item:hover .photo-item-delete {
+    opacity: 1;
+}
+
+/* Achievements */
+.achievements-summary {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border-radius: var(--radius-lg);
+    color: white;
+}
+
+.achievement-count {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+}
+
+.count-number {
+    font-size: 2.5em;
+    font-weight: 700;
+    display: block;
+}
+
+.achievement-progress-bar {
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.achievement-progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.achievement-card {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    text-align: center;
+    border: 2px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.achievement-card.unlocked {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+}
+
+.achievement-card.locked {
+    opacity: 0.5;
+    filter: grayscale(100%);
+}
+
+.achievement-icon {
+    font-size: 3em;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.achievement-card.unlocked .achievement-icon {
+    animation: bounceIn 0.5s ease;
+}
+
+.achievement-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.achievement-description {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+}
+
+.achievement-unlocked-date {
+    font-size: 0.75em;
+    color: var(--primary);
+    margin-top: 8px;
+    font-weight: 600;
+}
+
+/* Calculateur 1RM */
+.calculator-description {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.calculator-inputs {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    margin-bottom: 20px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 1.1em;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.calculator-result {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    padding: 30px;
+    border-radius: var(--radius-lg);
+    color: white;
+}
+
+.result-main {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.result-label {
+    font-size: 1em;
+    opacity: 0.9;
+    margin-bottom: 10px;
+}
+
+.result-value {
+    font-size: 3em;
+    font-weight: 700;
+}
+
+.percentage-table {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: var(--radius-md);
+}
+
+.percentage-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.percentage-row:last-child {
+    border-bottom: none;
+}
+
+.percentage-row span:first-child {
+    opacity: 0.9;
+}
+
+.percentage-row span:last-child {
+    font-weight: 700;
+    font-size: 1.1em;
+}
+
+/* Empty states */
+.empty-state-small {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state-small span {
+    font-size: 3em;
+    display: block;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+/* Quick add weight button on exercises */
+.exercise-quick-add {
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    margin-left: 8px;
+}
+
+.exercise-quick-add:hover {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .footer-nav {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .footer-btn {
+        font-size: 0.7em;
+        padding: 6px 2px;
+    }
+
+    .footer-icon {
+        font-size: 1.1em;
+    }
+
+    .weight-input-group {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .achievements-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    .photo-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    .modal-large {
+        max-width: 95%;
+    }
+
+    .result-value {
+        font-size: 2em;
+    }
+}
