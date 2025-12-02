@@ -246,7 +246,7 @@ function displayWorkout(workout) {
         category.exercises.forEach((exercise, exIndex) => {
             const exerciseId = `${catIndex}-${exIndex}`;
             html += `
-                <li class="exercise-item" data-exercise="${exerciseId}" draggable="true">
+                <li class="exercise-item" data-exercise="${exerciseId}" draggable="false">
                     <span class="drag-handle">⋮⋮</span>
                     <div style="flex: 1;">
                         <div class="exercise-name">${exercise.name}</div>
@@ -281,9 +281,25 @@ function displayWorkout(workout) {
             }
         });
 
+        // Gestion du drag handle
+        const dragHandle = item.querySelector('.drag-handle');
+        if (dragHandle) {
+            // Activer le drag seulement depuis le handle
+            dragHandle.addEventListener('mousedown', () => {
+                item.setAttribute('draggable', 'true');
+            });
+
+            dragHandle.addEventListener('touchstart', () => {
+                item.setAttribute('draggable', 'true');
+            });
+        }
+
         // Drag & Drop
         item.addEventListener('dragstart', handleDragStart);
-        item.addEventListener('dragend', handleDragEnd);
+        item.addEventListener('dragend', (e) => {
+            handleDragEnd(e);
+            item.setAttribute('draggable', 'false');
+        });
         item.addEventListener('dragover', handleDragOver);
         item.addEventListener('drop', handleDrop);
         item.addEventListener('dragleave', handleDragLeave);
